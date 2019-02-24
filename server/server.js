@@ -1,62 +1,56 @@
-const express = require('express')
-const bodyParser = require('body-parser')
+var express = require('express');
+var bodyParser = require('body-parser');
+var {ObjectID} = require('mongodb');
 
+var {mongoose} = require('./db/mongoose');
+var {Todo} = require('./models/todo');
+var {User} = require('./models/user');
 
-const {Todo} = require('./models/todo')
-const {User} = require('./models/user')
+var app = express();
+const port = process.env.PORT || 3000;
 
-const {ObjectID} = require('mongodb')
+app.use(bodyParser.json());
 
-const app = express()
+app.post('/todos', (req, res) => {
+  var todo = new Todo({
+    text: req.body.text
+  });
 
+  todo.save().then((doc) => {
+    res.send(doc);
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
 
-app.use(bodyParser.json())
+app.get('/todos', (req, res) => {
+  Todo.find().then((todos) => {
+    res.send({todos});
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
 
-app.get('/', (req, res) => {
-    res.send('Jebi seee')
-})
+app.get('/todos/:id', (req, res) => {
+  var id = req.params.id;
 
-app.post('/todos', (req, res, next) => {
-    console.log(req.body)
-    const todo = new Todo({
-        text: req.body.text
-    })
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
 
-    todo.save().then(data => {
-        res.send(data)
-    }).catch(e => res.status(400).send(e))
-})
-
-app.get('/todos', (req, res, next) => {
-    Todo.find().then(data => {
-        res.send({data})
-    }).catch(e => res.status(400).send(e))
-})
-
-app.get('/todos/:todoId', (req, res, next) => {
-    const id = req.params.todoId
-
-    if (!ObjectID.isValid(id)) {
-        return res.status(404).send()
+  Todo.findById(id).then((todo) => {
+    if (!todo) {
+      return res.status(404).send();
     }
 
-   Todo.findById(id).then(todo => {
-       if (!todo) {
-        res.status(404).send()
-       }
+    res.send({todo});
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
 
-       res.send({todo, kurac:'SIsa'})
+app.listen(port, () => {
+  console.log(`Started up at port ${port}`);
+});
 
-   }).catch(e => {
-       res.status(400).send()
-   }) 
-})
-
-app.listen(process.env.PORT, () => {
-    console.log(`App started on port`)
-})
-
-
-module.exports = {
-    app
-}
+module.exports = {app};
