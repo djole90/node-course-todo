@@ -52,7 +52,7 @@ app.get('/todos/:todoId', (req, res, next) => {
 })
 
 app.listen(process.env.PORT, () => {
-    console.log(`App started on port ${port}`)
+    console.log(`App started on port`)
 })
 
 
