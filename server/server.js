@@ -28,12 +28,9 @@ app.post('/todos', (req, res, next) => {
 })
 
 app.get('/todos', (req, res, next) => {
-    Todo
-    .find()
-    .then(data => {
-        res.send(data)
-    })
-    .catch(e => res.status(400).send(e))
+    Todo.find().then(data => {
+        res.send({data})
+    }).catch(e => res.status(400).send(e))
 })
 
 app.get('/todos/:todoId', (req, res, next) => {
