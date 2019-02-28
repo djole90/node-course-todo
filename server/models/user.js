@@ -30,7 +30,7 @@ var UserSchema = new mongoose.Schema({
       required: true
     }
   }]
-});
+}, { usePushEach: true }); // usePushEach .push dont work without it
 
 UserSchema.methods.toJSON = function () {
   const user = this
@@ -44,12 +44,33 @@ UserSchema.methods.generateAuthToken = function () {
   var access = 'auth';
   var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
 
- user.tokens.concat([{access, token}]);
+ user.tokens.push({access, token});
 
   return user.save().then(() => {
     return token;
   });
 };
+
+UserSchema.statics.findByToken = function (token) {
+  const User = this
+  let decoded
+
+  try {
+    decoded = jwt.verify(token, 'abc123')
+  } catch (e) {
+    // return new Promise((resolve, reject) => {
+    //   reject()
+    // })
+
+    return Promise.reject()
+  }
+
+  return User.findOne({
+    _id: decoded._id,
+    'tokens.token': token, // quotes are needed when dot included
+    'tokens.access': 'auth'
+  })
+}
 
 
 const User = mongoose.model('User', UserSchema);
